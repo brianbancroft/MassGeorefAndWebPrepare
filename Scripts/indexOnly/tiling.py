@@ -15,7 +15,7 @@ def createFootprint(dir):
         fieldList = ["filename","title","subtitle",
                      "province","year","Grid_Type","Scale","geoRef_rdy","location1","location2","location3"]
 
-        typeList = ["TEXT","TEXT","TEXT","TEXT","SHORT","TEXT","TEXT","TEXT","TEXT","TEXT","TEXT"]
+        typeList = ["TEXT","TEXT","TEXT","TEXT","TEXT","TEXT","TEXT","TEXT","TEXT","TEXT","TEXT"]
         
         n = 0
         while n < len(fieldList): 
@@ -31,9 +31,9 @@ def footprint(row, fc, yearText, gSuccess):
     #Example: [[x1,y1],[x2,y2],[x3,y3],[x4,y4]]
 
     if is_int(yearText) == True:
-        year = int(yearText)
+        year = yearText
     else:
-        year = 0
+        year = "0"
 
     featArray = [[(row[14].value),(row[13].value)],
                    [(row[12].value),(row[11].value)],
