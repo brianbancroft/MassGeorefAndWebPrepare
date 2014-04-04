@@ -39,7 +39,7 @@ coordSys = coordSys.factoryCode
 
 #6. union shape file (Optional)
 #unionShapefile = ""
-unionShapefile = arcpy.GetParameterAsText(6)
+unionShapeFileZip = arcpy.GetParameterAsText(6)
 
 #######################END PARAMETERS#####################################
 
@@ -72,18 +72,30 @@ errorLog = error_handling.createErrorLog(outputDir)
 arcpy.AddMessage("Error log created - no errors found yet")
 
 
-#Verify if the union shapefile exists.  Project, or define projection.
-if arcpy.Exists(unionShapefile) != True:
-    arcpy.AddMessage("Creating spatial index feature class")
-
-    #Create new footprint shapefile
-    unionShapefile = tiling.createFootprint(scratchDir)
-    arcpy.DefineProjection_management(unionShapefile, coordSys)
-else:
-    #project the existing shapefile to the coordinate system of interest
+#Determine if the input zip file spatial index exists. Unzip it and use it.
+if os.path.exists(unionShapeFileZip):
+    with zipfile.Zipfile(unionShapeFileZip, "r") as z:
+        tempZipdir = scratchDir + "\\zipTemp"
+        os.mkdir(tempZipDir)
+        z.extractall(tempZipDir)
+    for f in os.listdir(tempZipDir):
+        if f[2:] = "shp":
+            unionShapefile = tempZipDir + "\\" + f
+        
     arcpy.Project_management(unionShapefile, scratchDir + "\\" + "raster_footprint.shp",
                              coordSys)
     unionShapefile = scratchDir + "\\" + "raster_footprint.shp"
+    secondary_functions.emptyTempFolder(tempZipDir)
+    os.removedirs(tempZipDir)
+    
+
+#Verify if the union shapefile exists.  Project, or define projection.
+if arcpy.Exists(unionShapefile) != True:
+    arcpy.AddMessage("Creating new footprint file")
+    #Create new footprint shapefile
+    unionShapefile = tiling.createFootprint(scratchDir)
+    arcpy.DefineProjection_management(unionShapefile, coordSys)
+
 
 #open workbook
 workbook = xlrd.open_workbook(workbookName)
