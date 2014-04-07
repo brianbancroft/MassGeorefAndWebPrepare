@@ -42,6 +42,7 @@ coordSys = coordSys.factoryCode
 
 #6. union shape file (Optional)
 unionShapeFileZip = arcpy.GetParameterAsText(6)
+unionShapefile = ""
 
 #######################END PARAMETERS#####################################
 georefToggle = False
@@ -78,12 +79,12 @@ errorLog = error_handling.createErrorLog(outputDir)
 
 #Determine if the input zip file spatial index exists. Unzip it and use it.
 if os.path.exists(unionShapeFileZip):
-    with zipfile.Zipfile(unionShapeFileZip, "r") as z:
-        tempZipdir = scratchDir + "\\zipTemp"
+    with zipfile.ZipFile(unionShapeFileZip, "r") as z:
+        tempZipDir = scratchDir + "\\zipTemp"
         os.mkdir(tempZipDir)
         z.extractall(tempZipDir)
     for f in os.listdir(tempZipDir):
-        if f[2:] = "shp":
+        if f[-3:] == "shp":
             unionShapefile = tempZipDir + "\\" + f
         
     arcpy.Project_management(unionShapefile, scratchDir + "\\" + "raster_footprint.shp",
@@ -91,7 +92,6 @@ if os.path.exists(unionShapeFileZip):
     unionShapefile = scratchDir + "\\" + "raster_footprint.shp"
     secondary_functions.emptyTempFolder(tempZipDir)
     os.removedirs(tempZipDir)
-    
 
 #Verify if the union shapefile exists.  Project, or define projection.
 if arcpy.Exists(unionShapefile) != True:
@@ -126,7 +126,8 @@ for tabIndex in worksheetList:
                 #open row
                 worksheetRow = worksheet.row(rownum)
                 arcpy.AddMessage("now inspecting " + worksheetRow[0].value[:-6])
-                errorMessage = error_handling.checkForError(worksheetRow, tifList)  
+                #Third varible in function determines case between brechin and general tools
+                errorMessage = error_handling.checkForError(worksheetRow, tifList,"brechin")  
                 #does errorMessage equal ""?
                 if errorMessage != "":
                         arcpy.AddMessage("Problem observed with " + worksheetRow[0].value[:-6] + ". Adding entry to error log")
@@ -173,6 +174,13 @@ arcpy.AddMessage("All Geoprocessing done. Now archiving the spatial index featur
 arcpy.DeleteIdentical_management(unionShapefile ,
                                  'filename;title;subtitle;province;year;Grid_Type;Scale', '#', '0')
 
+
+
+#Remove duplicate features
+fields = ["filename","Grid_Type"]
+arcpy.AddMessage("Removing identical features in spatial index...")
+arcpy.DeleteIdentical_management(unionShapefile, fields)
+#Final Cleanup
 arcpy.AddMessage("Indexing complete. Carrying out final stages")
 if arcpy.Exists(scratchDir + "\\" + "raster_footprint.shp"):
     secondary_functions.removeLayers()

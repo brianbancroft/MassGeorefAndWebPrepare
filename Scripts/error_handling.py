@@ -5,29 +5,49 @@ import os
 
 
 ###a1. Check for error:###
-def checkForError(row, rasList):
+#Third varible in function determines case between brechin and general tools
+def checkForError(row, rasList,case):
     output = "no name match"
     
     #Go to first raster in list of rasters - for loop
     for raster in rasList:
         #does the raster name match cycled match the one in the excel row object?
-        if str(row[0].value[:-5]) == str(raster[:-5]):
-            
-            #are all the numerical fields filled?
-            n = 7
-            while n <= 14:
-                if output != "incomplete latlong fields" and output != "invalid character in latlong fields":
-                    if row[n].value == "": 
-                        output = "incomplete latlong fields"
-                    if str(type(row[n].value)) != "<type 'float'>":
-                        output = "invalid character in latlong fields"
-                if output != "incomplete latlong fields" and output != "invalid character in latlong fields":
-                    output = "bounding not rectangular - manual georef required"
-                    if row[6].value == 'Rectangular' or row[6].value == 'rectangular':
-                        output = ""
-                n += 1
 
-                            
+
+        if case == "brechin":
+
+            if str(row[0].value[:-5]) == str(raster[:-5]):
+                
+                #are all the numerical fields filled?
+                n = 7
+                while n <= 14:
+                    if output != "incomplete latlong fields" and output != "invalid character in latlong fields":
+                        if row[n].value == "": 
+                            output = "incomplete latlong fields"
+                        if str(type(row[n].value)) != "<type 'float'>":
+                            output = "invalid character in latlong fields"
+                    if output != "incomplete latlong fields" and output != "invalid character in latlong fields":
+                        output = "bounding not rectangular - manual georef required"
+                        if row[6].value == 'Rectangular' or row[6].value == 'rectangular':
+                            output = ""
+                    n += 1
+
+        else:
+            if str(row[0].value) == str(raster):
+                
+                #are all the numerical fields filled?
+                n = 7
+                while n <= 14:
+                    if output != "incomplete latlong fields" and output != "invalid character in latlong fields":
+                        if row[n].value == "": 
+                            output = "incomplete latlong fields"
+                        if str(type(row[n].value)) != "<type 'float'>":
+                            output = "invalid character in latlong fields"
+                    if output != "incomplete latlong fields" and output != "invalid character in latlong fields":
+                        output = "bounding not rectangular - manual georef required"
+                        if row[6].value == 'Rectangular' or row[6].value == 'rectangular':
+                            output = ""
+                    n += 1                            
 
     return output
 

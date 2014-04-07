@@ -8,7 +8,7 @@ import xlrd, xlwt, zipfile
 
 #import local modules
 import secondary_functions
-import error_handling
+import index_error_handling
 import tiling
 
 # Output directory:
@@ -23,6 +23,7 @@ coordSys = coordSys.factoryCode
 
 # union shape file (Optional)
 unionShapeFileZip = arcpy.GetParameterAsText(3)
+unionShapefile = ""
 
 #Create Scratch Directory
 scratchDir = outputDir + "\\" + "scratch"
@@ -36,16 +37,16 @@ if not os.path.exists(scratchDir):
 secondary_functions.setDataFrameGCS(coordSys)
                          
 #Create errorlog, successlog.  
-errorLog = error_handling.createErrorLog(outputDir)
+errorLog = index_error_handling.createErrorLog(outputDir)
 
 #Determine if the input zip file spatial index exists. Unzip it and use it.
 if os.path.exists(unionShapeFileZip):
-    with zipfile.Zipfile(unionShapeFileZip, "r") as z:
-        tempZipdir = scratchDir + "\\zipTemp"
+    with zipfile.ZipFile(unionShapeFileZip, "r") as z:
+        tempZipDir = scratchDir + "\\zipTemp"
         os.mkdir(tempZipDir)
         z.extractall(tempZipDir)
     for f in os.listdir(tempZipDir):
-        if f[2:] = "shp":
+        if f[-3:] == "shp":
             unionShapefile = tempZipDir + "\\" + f
         
     arcpy.Project_management(unionShapefile, scratchDir + "\\" + "raster_footprint.shp",
@@ -88,22 +89,27 @@ for tabIndex in worksheetList:
                 #open row
                 worksheetRow = worksheet.row(rownum)
                 arcpy.AddMessage("Adding entry " + worksheetRow[0].value + " to spatial index")
-                errorMessage = error_handling.checkForError(worksheetRow, "")  
+                errorMessage = index_error_handling.checkForError(worksheetRow)  
                 #does errorMessage equal ""?
                 if errorMessage != "":                        
-                        error_handling.addError(worksheetRow, tabIndex,
-                                                errorMessage, errorLog)
+                    index_error_handling.addError(worksheetRow, tabIndex,
+                                                      errorMessage, errorLog)
+                    if errorMessage == "bounding not rectangular - manual georef required" or errorMessage == "no name match":
+                        tiling.footprint(worksheetRow, unionShapefile,
+                                         tabIndex, 'False')
+                        arcpy.AddMessage("Entry " + worksheetRow[0].value + " successfuly added to spatial index")
+                    else:
+                        arcpy.AddMessage("Entry " + worksheetRow[0].value + " not added to spatial index. Bad Coordinates?")
+
                 else:
                     tiling.footprint(worksheetRow, unionShapefile,
                                      tabIndex ,'True')
                     arcpy.AddMessage("Entry " + worksheetRow[0].value + " successfuly added to spatial index")
 
-                if errorMessage == "bounding not rectangular - manual georef required" or errorMessage == "no name match":
-                    tiling.footprint(worksheetRow, unionShapefile,
-                                     tabIndex, 'False')
-                    arcpy.AddMessage("Entry " + worksheetRow[0].value + " successfuly added to spatial index")
-                else:
-                    arcpy.AddMessage("Entery " + worksheetRow[0].value + " not added to spatial index")
+#Remove duplicate features
+fields = ["filename","Grid_Type"]
+arcpy.AddMessage("Removing identical features in spatial index...")
+arcpy.DeleteIdentical_management(unionShapefile, fields)
 
 #move footprint to zip
 arcpy.AddMessage("Indexing complete. Carrying out final stages")
