@@ -38,6 +38,26 @@ secondary_functions.setDataFrameGCS(coordSys)
 #Create errorlog, successlog.  
 errorLog = error_handling.createErrorLog(outputDir)
 
+<<<<<<< HEAD:Scripts/indexOnly/main_IndexMaps.py
+=======
+#Determine if the input zip file spatial index exists. Unzip it and use it.
+if os.path.exists(unionShapeFileZip):
+    with zipfile.Zipfile(unionShapeFileZip, "r") as z:
+        tempZipdir = scratchDir + "\\zipTemp"
+        os.mkdir(tempZipDir)
+        z.extractall(tempZipDir)
+    for f in os.listdir(tempZipDir):
+        if f[2:] == "shp":
+            unionShapefile = tempZipDir + "\\" + f
+        
+    arcpy.Project_management(unionShapefile, scratchDir + "\\" + "raster_footprint.shp",
+                             coordSys)
+    unionShapefile = scratchDir + "\\" + "raster_footprint.shp"
+    secondary_functions.emptyTempFolder(tempZipDir)
+    os.removedirs(tempZipDir)
+    
+
+>>>>>>> ebb1cfdcc882dd96f1aa86f3e3466b9bbd57d5c3:Scripts/main_IndexMaps.py
 #Verify if the union shapefile exists.  Project, or define projection.
 if arcpy.Exists(unionShapefile) != True:
     #Create new footprint shapefile

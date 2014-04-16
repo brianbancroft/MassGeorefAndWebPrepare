@@ -84,7 +84,11 @@ if os.path.exists(unionShapeFileZip):
         os.mkdir(tempZipDir)
         z.extractall(tempZipDir)
     for f in os.listdir(tempZipDir):
+<<<<<<< HEAD
         if f[-3:] == "shp":
+=======
+        if f[2:] == "shp":
+>>>>>>> ebb1cfdcc882dd96f1aa86f3e3466b9bbd57d5c3
             unionShapefile = tempZipDir + "\\" + f
         
     arcpy.Project_management(unionShapefile, scratchDir + "\\" + "raster_footprint.shp",
