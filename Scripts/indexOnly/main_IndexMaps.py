@@ -1,0 +1,107 @@
+#Main Program, used to index rasters.  This is intended to be run in ArcGIS 10.1 or higher.  
+
+#import basic modules
+import os, arcpy, shutil
+
+#import all modules from 3rd parties
+import xlrd, xlwt, zipfile
+
+#import local modules
+import secondary_functions
+import error_handling
+import tiling
+
+# Output directory:
+outputDir = arcpy.GetParameterAsText(2)
+
+# Excel Files, multipart input:
+workbookName = arcpy.GetParameterAsText(0)
+
+#Spatial Coordinate System
+coordSys = arcpy.GetParameter(1)
+coordSys = coordSys.factoryCode
+
+# union shape file (Optional)
+unionShapefile = arcpy.GetParameterAsText(3)
+
+#Create Scratch Directory
+scratchDir = outputDir + "\\" + "scratch"
+cropTemp = scratchDir + "\\crop"
+restoredTemp = scratchDir + "\\restored"
+
+if not os.path.exists(scratchDir):
+    os.mkdir(scratchDir)
+
+#Set Data Frame Coordinate system to NAD 1927:
+secondary_functions.setDataFrameGCS(coordSys)
+                         
+#Create errorlog, successlog.  
+errorLog = error_handling.createErrorLog(outputDir)
+
+#Verify if the union shapefile exists.  Project, or define projection.
+if arcpy.Exists(unionShapefile) != True:
+    #Create new footprint shapefile
+    unionShapefile = tiling.createFootprint(scratchDir)
+    arcpy.DefineProjection_management(unionShapefile, coordSys)
+else:
+    #project the existing shapefile to the coordinate system of interest
+    arcpy.Project_management(unionShapefile, scratchDir + "\\" + "raster_footprint.shp",
+                             coordSys)
+    unionShapefile = scratchDir + "\\" + "raster_footprint.shp"
+
+#open workbook
+workbook = xlrd.open_workbook(workbookName)
+
+#create list of spreadsheeks in open workbook
+worksheetList = workbook.sheet_names()
+
+#For loop - for spreadsheet in spreadsheetList
+for tabIndex in worksheetList:
+    
+    #Ensure spreadsheet isn't named "template" or "Template"
+    if tabIndex != "Template" and tabIndex != "template":
+
+        #Open Worksheet
+        worksheet = workbook.sheet_by_name(tabIndex)
+        arcpy.AddMessage("\nIndexing entries from year: " + worksheet.name + "\n")
+
+        #Get row count, for loop cycling through rows
+        for rownum in xrange(worksheet.nrows):
+
+            #skip first row (if rowNum != 0)
+            if rownum != 0:
+                errorMessage = ""
+                #open row
+                worksheetRow = worksheet.row(rownum)
+                arcpy.AddMessage("Adding entry " + worksheetRow[0].value + " to spatial index")
+                errorMessage = error_handling.checkForError(worksheetRow, "")  
+                #does errorMessage equal ""?
+                if errorMessage != "":                        
+                        error_handling.addError(worksheetRow, tabIndex,
+                                                errorMessage, errorLog)
+                else:
+                    tiling.footprint(worksheetRow, unionShapefile,
+                                     tabIndex ,'True')
+                    arcpy.AddMessage("Entry " + worksheetRow[0].value + " successfuly added to spatial index")
+
+                if errorMessage == "bounding not rectangular - manual georef required" or errorMessage == "no name match":
+                    tiling.footprint(worksheetRow, unionShapefile,
+                                     tabIndex, 'False')
+                    arcpy.AddMessage("Entry " + worksheetRow[0].value + " successfuly added to spatial index")
+                else:
+                    arcpy.AddMessage("Entery " + worksheetRow[0].value + " not added to spatial index")
+
+#move footprint to zip
+arcpy.AddMessage("Indexing complete. Carrying out final stages")
+if arcpy.Exists(scratchDir + "\\" + "raster_footprint.shp"):
+    secondary_functions.removeLayers()
+    secondary_functions.removeLayers()
+    arcpy.AddField_management(scratchDir + "\\" + "raster_footprint.shp", "DATE_YEAR", "DATE")
+    arcpy.ConvertTimeField_management(scratchDir + "\\" + "raster_footprint.shp","year","yyyy",
+                                      "DATE_YEAR")
+    #arcpy.AddMessage("Converting Feature Class into Layer")
+    #arcpy.MakeFeatureLayer_management(scratchDir + "\\" + "raster_footprint.shp",
+    #                                  outputDir + "\\" +  "spatial_index_lyr")
+    secondary_functions.zipFolder(scratchDir, outputDir + "\\" + "FOOTPRINT_SHP" + ".zip","")
+    secondary_functions.emptyTempFolder(scratchDir)
+    os.removedirs(scratchDir)

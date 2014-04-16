@@ -6,7 +6,7 @@
 import os, arcpy, shutil
 
 #import all modules from 3rd parties
-import xlrd, xlwt, zipfile
+import xlrd, xlwt
 
 #import local modules
 import secondary_functions
@@ -39,8 +39,7 @@ coordSys = coordSys.factoryCode
 
 #6. union shape file (Optional)
 #unionShapefile = ""
-unionShapeFileZip = arcpy.GetParameterAsText(6)
-unionShapefile = ""
+unionShapefile = arcpy.GetParameterAsText(6)
 
 #######################END PARAMETERS#####################################
 
@@ -73,32 +72,18 @@ errorLog = error_handling.createErrorLog(outputDir)
 arcpy.AddMessage("Error log created - no errors found yet")
 
 
-#Determine if the input zip file spatial index exists. Unzip it and use it.
-if os.path.exists(unionShapeFileZip):
-    with zipfile.ZipFile(unionShapeFileZip, "r") as z:
-        tempZipDir = scratchDir + "\\zipTemp"
-        os.mkdir(tempZipDir)
-        z.extractall(tempZipDir)
-    for f in os.listdir(tempZipDir):
-        if f[-3:] == "shp":
-            unionShapefile = tempZipDir + "\\" + f
-
-                
-    arcpy.Project_management(unionShapefile, scratchDir + "\\" + "raster_footprint.shp",
-                             coordSys)
-    unionShapefile = scratchDir + "\\" + "raster_footprint.shp"
-    secondary_functions.emptyTempFolder(tempZipDir)
-    os.removedirs(tempZipDir)
-    
-    
-
 #Verify if the union shapefile exists.  Project, or define projection.
 if arcpy.Exists(unionShapefile) != True:
-    arcpy.AddMessage("Creating new footprint file")
+    arcpy.AddMessage("Creating spatial index feature class")
+
     #Create new footprint shapefile
     unionShapefile = tiling.createFootprint(scratchDir)
     arcpy.DefineProjection_management(unionShapefile, coordSys)
-
+else:
+    #project the existing shapefile to the coordinate system of interest
+    arcpy.Project_management(unionShapefile, scratchDir + "\\" + "raster_footprint.shp",
+                             coordSys)
+    unionShapefile = scratchDir + "\\" + "raster_footprint.shp"
 
 #open workbook
 workbook = xlrd.open_workbook(workbookName)
@@ -126,7 +111,7 @@ for tabIndex in worksheetList:
                 #open row
                 worksheetRow = worksheet.row(rownum)
                 arcpy.AddMessage("Testing index entry for " + worksheetRow[0].value)
-                errorMessage = error_handling.checkForError(worksheetRow, tifList,"")  
+                errorMessage = error_handling.checkForError(worksheetRow, tifList)  
                 #does errorMessage equal ""?
                 if errorMessage != "":
                         arcpy.AddMessage("Error found for " + worksheetRow[0].value + ". Check error log")
@@ -180,12 +165,6 @@ os.removedirs(cropTemp)
 arcpy.AddMessage("All indexing and archiving complete")
 arcpy.DeleteIdentical_management(unionShapefile ,
                                  'filename;title;subtitle;province;year;Grid_Type;Scale', '#', '0')
-
-
-#Remove duplicate features
-fields = ["filename","Grid_Type"]
-arcpy.AddMessage("Removing identical features in spatial index...")
-arcpy.DeleteIdentical_management(unionShapefile, fields)
 #move footprint to scratch folder
 arcpy.AddMessage("Indexing complete. Carrying out final stages")
 if arcpy.Exists(scratchDir + "\\" + "raster_footprint.shp"):
