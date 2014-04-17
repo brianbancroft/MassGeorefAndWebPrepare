@@ -9,9 +9,9 @@ import arcpy, os, zipfile
 dir = arcpy.GetParameterAsText(0)
 fc = arcpy.GetParameterAsText(1)
 url = arcpy.GetParameterAsText(2)
+myZip = fc
 
 
-fc = zipFile
 fc_folder = os.path.dirname(os.path.realpath(fc))
 with zipfile.ZipFile(fc, "r") as z:
     newPath = fc_folder + "\\tempPath\\"
@@ -22,7 +22,7 @@ os.remove(fc)
 list = os.listdir(newPath)
 if list[0][:-3] == list[1][:-3]:
 
-    fc = os.listdir(newPath)[0][:-3] + "shp"
+    fc = newPath + "\\" + os.listdir(newPath)[0][:-3] + "shp"
     cursor = arcpy.da.UpdateCursor(fc, ("filename","location1","location2"))
     for row in cursor:
         file = row[0]
@@ -31,14 +31,14 @@ if list[0][:-3] == list[1][:-3]:
         if os.path.exists(dir + "\\" + row[0] + "White.zip"):
             row[2] = url + "/" + row[0] + "White.zip"
         cursor.updateRow(row)
-
+    del cursor
 #Zip the results.  
-if zipBool:
-    list = os.listdir(newPath)         
-    with zipfile.ZipFile(my_zip, "w") as z:
-        for l in list:
-            z.write(newPath + l,l,zipfile.ZIP_DEFLATED)
-            
+
+list = os.listdir(newPath)         
+with zipfile.ZipFile(myZip, "w") as z:
     for l in list:
-        os.remove(newPath + l)
-            
+        z.write(newPath + l,l,zipfile.ZIP_DEFLATED)
+        
+for l in list:
+    os.remove(newPath + l)
+        
