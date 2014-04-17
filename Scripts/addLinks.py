@@ -11,7 +11,7 @@ fc = arcpy.GetParameterAsText(1)
 url = arcpy.GetParameterAsText(2)
 myZip = fc
 
-
+#extract all files from the zip, delete the zip
 fc_folder = os.path.dirname(os.path.realpath(fc))
 with zipfile.ZipFile(fc, "r") as z:
     newPath = fc_folder + "\\tempPath\\"
@@ -32,13 +32,16 @@ if list[0][:-3] == list[1][:-3]:
             row[2] = url + "/" + row[0] + "White.zip"
         cursor.updateRow(row)
     del cursor
-#Zip the results.  
 
+#Zip the results.  
 list = os.listdir(newPath)         
 with zipfile.ZipFile(myZip, "w") as z:
     for l in list:
         z.write(newPath + l,l,zipfile.ZIP_DEFLATED)
-        
+
+#Remove the temp folder and its files
 for l in list:
     os.remove(newPath + l)
-        
+if os.path.exists(newPath):
+    os.rmdir(newPath)
+
