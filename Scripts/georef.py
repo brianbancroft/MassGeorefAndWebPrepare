@@ -1,4 +1,3 @@
-
 import arcpy
 import secondary_functions
 import os
@@ -47,5 +46,6 @@ def georef(xlRow, inDir, inRas, scratch, coord):
     #Run the warp_management tool to georeference the raster.
     #output also goes to the scratch directory + // cropped + //outRas//
     arcpy.Warp_management(inRasPath,srcPts,destPts,outRas)
-    
+    secondary_functions.removeLayers()
+
 
