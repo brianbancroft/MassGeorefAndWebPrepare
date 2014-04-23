@@ -62,7 +62,7 @@ dirList = os.listdir(tifDir)
 #Get list of tiffs, ensure it is just a list of tiffs with nothing else.  
 tifList = []
 for l in dirList:
-    if l[-4:] == ".tif":
+    if l[-4:] == ".tif" or l[-4:] == ".TIF":
         tifList.append(l)
 del dirList
 
