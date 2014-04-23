@@ -127,7 +127,8 @@ for tabIndex in worksheetList:
                 worksheetRow = worksheet.row(rownum)
                 arcpy.AddMessage("Testing index entry for " + worksheetRow[0].value)
                 errorMessage = error_handling.checkForError(worksheetRow, tifList,"")  
-                #does errorMessage equal ""?
+                
+                #Determine if errors exist, if not then georeference if required and package.
                 if errorMessage != "":
                         arcpy.AddMessage("Error found for " + worksheetRow[0].value + ". Check error log")
                         error_handling.addError(worksheetRow, tabIndex,
@@ -139,8 +140,6 @@ for tabIndex in worksheetList:
                         georef.georef(worksheetRow, tifDir,
                                       worksheetRow[0].value,
                                       cropTemp, coordSys)
-
-                        secondary_functions.removeLayers()
 
                         #(Zip all files in the //scratch// directory, move the new file to the output directory
                         zipArch = outputDir + "\\" + worksheetRow[0].value[:-4] + ".zip"
@@ -174,18 +173,15 @@ for tabIndex in worksheetList:
                                  tabIndex, 'False')
                 arcpy.AddMessage("Archiving finished for " + worksheetRow[0].value)
                     
-                
-
+#Clean folders
 os.removedirs(cropTemp)
 arcpy.AddMessage("All indexing and archiving complete")
-arcpy.DeleteIdentical_management(unionShapefile ,
-                                 'filename;title;subtitle;province;year;Grid_Type;Scale', '#', '0')
-
 
 #Remove duplicate features
 fields = ["filename","Grid_Type"]
 arcpy.AddMessage("Removing identical features in spatial index...")
 arcpy.DeleteIdentical_management(unionShapefile, fields)
+
 #move footprint to scratch folder
 arcpy.AddMessage("Indexing complete. Carrying out final stages")
 if arcpy.Exists(scratchDir + "\\" + "raster_footprint.shp"):
@@ -193,9 +189,6 @@ if arcpy.Exists(scratchDir + "\\" + "raster_footprint.shp"):
     arcpy.AddField_management(scratchDir + "\\" + "raster_footprint.shp", "DATE_YEAR", "DATE")
     arcpy.ConvertTimeField_management(scratchDir + "\\" + "raster_footprint.shp","year","yyyy",
                                       "DATE_YEAR")
-    #arcpy.AddMessage("Converting Feature Class into Layer")
-    #arcpy.MakeFeatureLayer_management(scratchDir + "\\" + "raster_footprint.shp",
-    #                                  outputDir + "\\" +  "spatial_index_lyr")
     secondary_functions.zipFolder(scratchDir, outputDir + "\\" + "FOOTPRINT_SHP" + ".zip",metadataLoc)
     secondary_functions.emptyTempFolder(scratchDir)
     os.removedirs(scratchDir)
