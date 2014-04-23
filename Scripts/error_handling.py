@@ -4,20 +4,15 @@ import xlwt
 import os
 
 
-###a1. Check for error:###
+#Function -Check for error
 #Third varible in function determines case between brechin and general tools
 def checkForError(row, rasList,case):
     output = "no name match"
-    
     #Go to first raster in list of rasters - for loop
     for raster in rasList:
         #does the raster name match cycled match the one in the excel row object?
-
-
         if case == "brechin":
-
             if str(row[0].value[:-5]) == str(raster[:-5]):
-                
                 #are all the numerical fields filled?
                 n = 7
                 while n <= 14:
@@ -34,7 +29,6 @@ def checkForError(row, rasList,case):
 
         else:
             if str(row[0].value) == str(raster):
-                
                 #are all the numerical fields filled?
                 n = 7
                 while n <= 14:
@@ -51,7 +45,7 @@ def checkForError(row, rasList,case):
 
     return output
 
-###a2. addError:     ###       
+###addError:           
 def addError(inrow, yr, error, wrkBk):
 
     #open output workbook using xlrd 
@@ -75,8 +69,6 @@ def addError(inrow, yr, error, wrkBk):
     del m
 
     #populate new row with the row entries from the source spreadsheet
-    
-    
     m = 0
     while m <= 14:
         outws.write(n,m, inrow[m].value)
@@ -89,10 +81,7 @@ def addError(inrow, yr, error, wrkBk):
     #Save and overwrite
     outwb.save(wrkBk)
 
-
-
-
-###b3. Create Error Log
+#Create Error Log
 def createErrorLog(dir):
     #construct sheet
     fc = "errorLog-indexing-" + str(datetime.date.today()) + ".xls"
