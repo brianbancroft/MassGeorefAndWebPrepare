@@ -186,9 +186,6 @@ arcpy.DeleteIdentical_management(unionShapefile, fields)
 arcpy.AddMessage("Indexing complete. Carrying out final stages")
 if arcpy.Exists(scratchDir + "\\" + "raster_footprint.shp"):
     secondary_functions.removeLayers()
-    arcpy.AddField_management(scratchDir + "\\" + "raster_footprint.shp", "DATE_YEAR", "DATE")
-    arcpy.ConvertTimeField_management(scratchDir + "\\" + "raster_footprint.shp","year","yyyy",
-                                      "DATE_YEAR")
     secondary_functions.zipFolder(scratchDir, outputDir + "\\" + "FOOTPRINT_SHP" + ".zip",metadataLoc)
     secondary_functions.emptyTempFolder(scratchDir)
     os.removedirs(scratchDir)
