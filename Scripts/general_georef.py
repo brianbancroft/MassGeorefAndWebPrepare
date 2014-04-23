@@ -110,7 +110,7 @@ worksheetList = workbook.sheet_names()
 for tabIndex in worksheetList:
     
     #Ensure spreadsheet isn't named "template" or "Template"
-    if tabIndex != "Template" and tabIndex != "template":
+    if tabIndex != "Template" and tabIndex != "template" and tabIndex != "Validation - Do not delete":
 
         #Open Worksheet
         worksheet = workbook.sheet_by_name(tabIndex)
