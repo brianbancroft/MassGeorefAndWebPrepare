@@ -6,13 +6,9 @@ import xlrd
 import xlwt
 import os
 
-
-###a1. Check for error:###
+###Function: Check an excel worksheet row for any errors in the LatLong Fields
 def checkForError(row):
     output = ""
-    
-    
-
     #are all the numerical fields filled?
     n = 7
     while n <= 14:
@@ -26,10 +22,9 @@ def checkForError(row):
             if row[6].value == 'Rectangular' or row[6].value == 'rectangular':
                 output = ""
         n += 1
-
     return output
 
-###a2. addError:     ###       
+###Function: Add Error to the "Error Log" Excel workbook
 def addError(inrow, yr, error, wrkBk):
 
     #open output workbook using xlrd 
@@ -37,7 +32,6 @@ def addError(inrow, yr, error, wrkBk):
     worksheet = workbook.sheet_by_index(0)
     #get length of workbook
     nrows = worksheet.nrows - 1
-
     #create output workbook from scratch
     outwb = xlwt.Workbook(encoding = 'UTF-8')
     outws = outwb.add_sheet("log")
@@ -51,26 +45,18 @@ def addError(inrow, yr, error, wrkBk):
             m += 1
         n += 1
     del m
-
     #populate new row with the row entries from the source spreadsheet
-    
-    
     m = 0
     while m <= 14:
         outws.write(n,m, inrow[m].value)
         m += 1
-
     #add year, province, error type
     outws.write(n,15,yr)
     outws.write(n,16,error)
-
     #Save and overwrite
     outwb.save(wrkBk)
 
-
-
-
-###b3. Create Error Log
+###Function: Create new error log excel workbook
 def createErrorLog(dir):
     #construct sheet
     fc = "errorLog-indexing-" + str(datetime.date.today()) + ".xls"
