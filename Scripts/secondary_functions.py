@@ -5,23 +5,21 @@ import xlrd
 import shutil
 import zipfile
 
-
-
-
-###b2. Set Coordinate System
+###Function:  Set Coordinate System
 def setDataFrameGCS(c):
     mxd = arcpy.mapping.MapDocument("CURRENT")
     df = arcpy.mapping.ListDataFrames(mxd)[0]
     df.spatialReference = arcpy.SpatialReference(c)
+    del mxd
 
-###b3. Create Error Log
+###Function:  Create Blank Error Log
 def createErrorLog(dir):
     #construct sheet
     fc = "errorLog-" + str(datetime.date.today()) + ".xls"
     wb = xlwt.Workbook(encoding = 'UTF-8')
     ws = wb.add_sheet("log")
 
-    #Populate first row
+    #Populate first row with headings
     cellEntry = ["File","Map_Title","Map_Subtitle","grid_type","scale",
                  "province_state","bounding","SE_LAT","SE_LONG","SW_LAT",
                  "SW_LONG","NW_LAT","NW_LONG","NE_LAT","NE_LONG",
@@ -41,7 +39,7 @@ def createErrorLog(dir):
 
     return(dir + "/" + fc)
 
-###b4. Create Success Log
+###Function: Create Success Log
 def createLog(dir):
     #construct sheet
     fc = "success_log-" + str(datetime.date.today()) + ".xls"
@@ -67,7 +65,7 @@ def createLog(dir):
         wb.save(dir + "/" + fc)
     return(dir + "/" + fc)
 
-###b5. Remove Layers
+###Function: Remove Layers in data frame
 def removeLayers():
     mxd = arcpy.mapping.MapDocument("CURRENT")
     for df in arcpy.mapping.ListDataFrames(mxd):
@@ -76,13 +74,13 @@ def removeLayers():
     del mxd
 
 
-###b6. emptyTempFolder(folder)
+###Function: emptyTempFolder(folder)
 def emptyTempFolder(folder):
     list = os.listdir(folder)
     for l in list:
         os.remove( folder + "\\" + l)
 
-###b7. Archive files into zip
+###Function: Archive files into zip
 def zipFolder(my_dir, my_zip,metadata):
     list = os.listdir(my_dir)         
     with zipfile.ZipFile(my_zip, "w") as z:
