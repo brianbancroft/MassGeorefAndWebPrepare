@@ -1,4 +1,6 @@
-#Main Program, used to index rasters.  This is intended to be run in ArcGIS 10.1 or higher.  
+#This program creates a "Footprint" feature class based on an index workbook used as an input.
+#Ideally, this script is good to test the lat-long coordinates of a large index workbook before
+#Committing to a georeferencing session.
 
 #import basic modules
 import os, arcpy, shutil
@@ -29,16 +31,12 @@ unionShapefile = ""
 scratchDir = outputDir + "\\" + "scratch"
 cropTemp = scratchDir + "\\crop"
 restoredTemp = scratchDir + "\\restored"
-
 if not os.path.exists(scratchDir):
     os.mkdir(scratchDir)
-
 #Set Data Frame Coordinate system to NAD 1927:
 secondary_functions.setDataFrameGCS(coordSys)
-                         
-#Create errorlog, successlog.  
+#Create errorlog
 errorLog = index_error_handling.createErrorLog(outputDir)
-
 #Determine if the input zip file spatial index exists. Unzip it and use it.
 if os.path.exists(unionShapeFileZip):
     with zipfile.ZipFile(unionShapeFileZip, "r") as z:
@@ -55,7 +53,6 @@ if os.path.exists(unionShapeFileZip):
     secondary_functions.emptyTempFolder(tempZipDir)
     os.removedirs(tempZipDir)
     
-
 #Verify if the union shapefile exists.  Project, or define projection.
 if arcpy.Exists(unionShapefile) != True:
     arcpy.AddMessage("Creating new footprint file")
@@ -63,26 +60,19 @@ if arcpy.Exists(unionShapefile) != True:
     unionShapefile = tiling.createFootprint(scratchDir)
     arcpy.DefineProjection_management(unionShapefile, coordSys)
 
-
 #open workbook
 workbook = xlrd.open_workbook(workbookName)
-
 #create list of spreadsheeks in open workbook
 worksheetList = workbook.sheet_names()
-
 #For loop - for spreadsheet in spreadsheetList
 for tabIndex in worksheetList:
-    
     #Ensure spreadsheet isn't named "template" or "Template"
     if tabIndex != "Template" and tabIndex != "template":
-
         #Open Worksheet
         worksheet = workbook.sheet_by_name(tabIndex)
         arcpy.AddMessage("\nIndexing entries from year: " + worksheet.name + "\n")
-
         #Get row count, for loop cycling through rows
         for rownum in xrange(worksheet.nrows):
-
             #skip first row (if rowNum != 0)
             if rownum != 0:
                 errorMessage = ""
@@ -119,9 +109,6 @@ if arcpy.Exists(scratchDir + "\\" + "raster_footprint.shp"):
     arcpy.AddField_management(scratchDir + "\\" + "raster_footprint.shp", "DATE_YEAR", "DATE")
     arcpy.ConvertTimeField_management(scratchDir + "\\" + "raster_footprint.shp","year","yyyy",
                                       "DATE_YEAR")
-    #arcpy.AddMessage("Converting Feature Class into Layer")
-    #arcpy.MakeFeatureLayer_management(scratchDir + "\\" + "raster_footprint.shp",
-    #                                  outputDir + "\\" +  "spatial_index_lyr")
     secondary_functions.zipFolder(scratchDir, outputDir + "\\" + "FOOTPRINT_SHP" + ".zip","")
     secondary_functions.emptyTempFolder(scratchDir)
     os.removedirs(scratchDir)
