@@ -1,6 +1,7 @@
-#Main Program, used to georeference and index rasters without nomenclature
-
-#This is intended to be run in ArcGIS 10.1 or higher.  
+#Designed for use in ArcGIS 10.1 as a tool, this script does three things:
+#1. It creates a spatial footprint feature class based on rows in an excel index file
+#2. It georeferences images using the Warp tool in ArcGIS (Optional)
+#3. It packages each raster into a zip file, maintaining the name of the raster it zips
 
 #import basic modules
 import os, arcpy, shutil
@@ -42,12 +43,9 @@ coordSys = coordSys.factoryCode
 unionShapeFileZip = arcpy.GetParameterAsText(6)
 unionShapefile = ""
 
-#######################END PARAMETERS#####################################
-
 #Create Scratch Directory
 scratchDir = outputDir + "\\" + "scratch"
 cropTemp = scratchDir + "\\crop"
-
 if not os.path.exists(scratchDir):
     os.mkdir(scratchDir)
 if not os.path.exists(cropTemp):
@@ -115,7 +113,6 @@ for tabIndex in worksheetList:
         #Open Worksheet
         worksheet = workbook.sheet_by_name(tabIndex)
         arcpy.AddMessage("Opening worksheet for " + worksheet.name)
-
 
         #Get row count, for loop cycling through rows
         for rownum in xrange(worksheet.nrows):
